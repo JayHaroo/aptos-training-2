@@ -1,9 +1,14 @@
 module user::voting{
 
-    vector<u8> voterName;
-    u64 candidateCount;
-    vector<u8> candidateName;
-    vector<u8> candidateVotesCount;
+    struct voterName {
+        pub name: vector<u8>,
+    }
+    struct candidateName {
+        pub name: vector<u8>,
+    }
+    struct candidateVotesCount {
+        pub votes: u64,
+    }
 
     struct Vote {
         pub candidate: u8,
@@ -25,12 +30,12 @@ module user::voting{
     }
     
     public entry fun setVoterName(name: vector<u8>) {
-        voterName = name;
+        voterName.name = name;
     }
 
     #[view]
     public fun getVoterName(): vector<u8> {
-        return voterName;
+        return voterName.name;
     }
 
     public entry fun voteForCandidate(candidate: u8) {
@@ -40,7 +45,7 @@ module user::voting{
             candidate2.votes = candidate2.votes + 1;
         }
     }
-    
+
     #[view]
     public fun getCandidateVotes(candidate: u8): u64 {
         if (candidate == 1) {
