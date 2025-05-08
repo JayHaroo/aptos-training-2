@@ -1,60 +1,52 @@
-module user::voting{
+module user::voting {
+    use std::vector;
+    use std::signer;
 
-    struct voterName {
-        pub name: vector<u8>,
-    }
-    struct candidateName {
-        pub name: vector<u8>,
-    }
-    struct candidateVotesCount {
-        pub votes: u64,
+    struct Candidate has key {
+        name: vector<u8>,
+        votes: u64,
     }
 
-    struct Vote {
-        pub candidate: u8,
-        pub voter: address,
+    struct Voter has key {
+        has_voted: bool,
     }
 
-    struct Candidate {
-        pub name: vector<u8>,
-        pub votes: u64,
+    struct VotingState has key {
+        candidate1: Candidate,
+        candidate2: Candidate,
     }
 
-    Candidate candidate1 {
-        name: b"Tecs Batitis",
-        votes: 0,
-    }
-    Candidate candidate2 {
-        name: b"Bronny James",
-        votes: 0,
-    }
-    
-    public entry fun setVoterName(name: vector<u8>) {
-        voterName.name = name;
+    public fun initialize(admin: &signer) {
+        assert!(!exists<VotingState>(signer::address_of(admin)), 1);
+        move_to(admin, VotingState {
+            candidate1: Candidate { name: b"Tecs Batitis", votes: 0 },
+            candidate2: Candidate { name: b"Bronny James", votes: 0 },
+        });
     }
 
-    #[view]
-    public fun getVoterName(): vector<u8> {
-        return voterName.name;
-    }
+    public entry fun vote(s: &signer, candidate: u8) {
+        let voter_addr = signer::address_of(s);
 
-    public entry fun voteForCandidate(candidate: u8) {
+        assert!(!exists<Voter>(voter_addr), 2);
+        move_to(s, Voter { has_voted: true });
+
+        let state = borrow_global_mut<VotingState>(voter_addr);
         if (candidate == 1) {
-            candidate1.votes = candidate1.votes + 1;
+            state.candidate1.votes = state.candidate1.votes + 1;
         } else if (candidate == 2) {
-            candidate2.votes = candidate2.votes + 1;
+            state.candidate2.votes = state.candidate2.votes + 1;
+        } else {
+            assert!(false, 3); // Invalid candidate
         }
     }
 
-    #[view]
-    public fun getCandidateVotes(candidate: u8): u64 {
+    public fun get_votes(addr: address, candidate: u8): u64 {
+        let state = borrow_global<VotingState>(addr);
         if (candidate == 1) {
-            return candidate1.votes;
+            return state.candidate1.votes;
         } else if (candidate == 2) {
-            return candidate2.votes;
+            return state.candidate2.votes;
         }
-        return 0;
+        0
     }
-
-    
 }
